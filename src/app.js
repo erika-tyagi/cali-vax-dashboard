@@ -34,6 +34,10 @@ function myMap (caBase, caSchools) {
   map.addLayer(new L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap'})); 
   map.addLayer(new L.geoJSON(caBase, {style: {"color": "#b3abaa", "weight": 1, "opacity": 0.1}})); 
 
+  // search bar 
+  var markersLayer = new L.LayerGroup();
+  map.addLayer(markersLayer);
+
   // home button 
   // https://gis.stackexchange.com/questions/127286/home-button-leaflet-map
   L.easyButton('fa-home', function (btn, map){map.setView([37, -119], 6)}, 'Zoom To Home').addTo(map);
