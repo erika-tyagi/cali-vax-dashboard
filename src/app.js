@@ -13,26 +13,78 @@ domReady(() => {
   Promise.all([
     json('./data/california.geojson'),
     json('./data/ca-schools.geojson'),
+    json('./data/ca-schools_small.geojson'), 
   ]).then(d => {
-    const [caBase, caSchools] = d;
+    const [caBase, caSchools, caSchoolsSmall] = d;
     myMap(caBase, caSchools);
+    myStrip(caSchoolsSmall); 
   });
 });
 
-// http://bl.ocks.org/d3noob/9267535
-// https://stackoverflow.com/questions/40047326/overlaying-circles-on-leaflet-with-d3-results-in-not-positioned-properly
-// http://bl.ocks.org/1Cr18Ni9/d72b6ba95285b80fe4c7498e784a8e0c
-// http://bl.ocks.org/Andrew-Reid/11602fac1ea66c2a6d7f78067b2deddb
-// https://leafletjs.com/examples/choropleth/
-// https://bost.ocks.org/mike/leaflet/ 
+// STRIP PLOT 
+function myStrip(caSchools) {
+  var margin = {top: 20, right: 70, bottom: 300, left: 10}; 
+  var width = 300 - margin.left - margin.right, 
+      height = 875 - margin.top - margin.bottom;  
 
-// MAP
+  var svg = d3.select('#strip').append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g'); 
+
+  var yScale = d3.scaleLinear()
+    .domain([95, 0])
+    .range([height, 0]); 
+
+  var xScale = d3.scaleLinear()
+    .domain([0, 1])
+    .range([height, 0]); 
+
+  var yAxis = d3.axisRight()
+    .scale(yScale)
+    .tickValues([95, 90, 80, 0])
+    .tickFormat(function(d) {return d * 1 + "%"}); 
+
+  function getColor (d) {
+    return d > 95 ? '#1696d2' : 
+           d > 90 ? '#55b748' :
+           d > 80 ? '#e88e2d' : 
+           '#6e1614';
+  }; 
+
+  svg.selectAll('rect')
+    .data(caSchools.features)
+    .enter()
+    .append('rect')
+    .attr('x', xScale(1))
+    .attr('y', d => yScale(d.properties.PERCENT_jitter))
+    .attr('width', 80)
+    .attr('height', 0.5)
+    .attr('fill', d => getColor(d.properties.PERCENT))
+    .on('mouseover', d => mouseOverControl(d))
+    .on('mouseout', d => mouseOutControl(d))
+    .on('click', d => clickControl(d)); 
+
+  svg.append('g')
+    .attr('class', 'text')
+    .attr('transform', 'translate(0' + 85 + ',' + '5)')
+    .call(yAxis);
+}; 
+
+function mouseOverControl() {}; 
+function mouseOutControl() {}; 
+function clickControl() {}; 
+
+// MAP 
 function myMap (caBase, caSchools) {
 
   // base map 
-  var map = L.map('map', {center: [37, -119],  zoom: 6}); 
-  map.addLayer(new L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap'})); 
-  map.addLayer(new L.geoJSON(caBase, {style: {"color": "#b3abaa", "weight": 1, "opacity": 0.1}})); 
+  var map = L.map('map', 
+    {center: [37.5, -119],  zoom: 6}); 
+  map.addLayer(new L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+    {attribution: '© OpenStreetMap'})); 
+  map.addLayer(new L.geoJSON(caBase, 
+    {style: {"color": "#696969", "weight": 1}})); 
 
   // search bar 
   var markersLayer = new L.LayerGroup();
@@ -67,12 +119,12 @@ function myMap (caBase, caSchools) {
   };
 
   info.update = function (d) {
-      this._div.innerHTML = '<h4>Kindergarten MMR Coverage</h4>' + (d ?
+      this._div.innerHTML = '<h4>KINDERGARTEN MMR COVERAGE</h4>' + (d ?
         d.name + "<br/>" +
         d.city + ", CA" + "<br/>" + "<br/>" + 
         "ENROLLMENT: " + d.enrollment + "<br/>" + 
         "COVERAGE: " + d.coverage + "%" + "<br/>" 
-        : "Hover over a school to learn more");
+        : "Hover over a school for details.");
   };
 
   info.addTo(map);
@@ -88,12 +140,12 @@ function myMap (caBase, caSchools) {
 
   var onColor = function (d) {
     svg.selectAll("circle").filter("." + this.getAttribute(d.id))
-      .style("opacity", 0.9);
+      .style("opacity", 0.8);
   }; 
 
   var offColor = function (d) {
     svg.selectAll("circle").filter("." + this.getAttribute(d.id))
-      .style("opacity", 0.5);
+      .style("opacity", 0.8);
   }; 
 
   var clicked = function (d) {
@@ -102,7 +154,7 @@ function myMap (caBase, caSchools) {
 
   // schools   
   function getColor (d) {
-    return d > 97 ? '#1696d2' : 
+    return d > 95 ? '#1696d2' : 
            d > 90 ? '#55b748' :
            d > 80 ? '#e88e2d' : 
            '#6e1614';
@@ -115,7 +167,7 @@ function myMap (caBase, caSchools) {
     .attr("name", d => d.name)
     .attr("city", d => d.city)
     .attr("fill", d => getColor(d.coverage))
-    .style("opacity", 0.5) 
+    .style("opacity", 0.8) 
     .attr("r", d => Math.sqrt(parseInt(d.enrollment) * 0.1))
     .attr("active", false)
     .on("click", clicked); 
@@ -151,3 +203,18 @@ function myMap (caBase, caSchools) {
       }); 
   }; 
 }
+
+// MAP 
+// http://bl.ocks.org/d3noob/9267535
+// https://stackoverflow.com/questions/40047326/overlaying-circles-on-leaflet-with-d3-results-in-not-positioned-properly
+// http://bl.ocks.org/1Cr18Ni9/d72b6ba95285b80fe4c7498e784a8e0c
+// http://bl.ocks.org/Andrew-Reid/11602fac1ea66c2a6d7f78067b2deddb
+// https://leafletjs.com/examples/choropleth/
+// https://bost.ocks.org/mike/leaflet/ 
+// https://alenastern.github.io/interactive_aid_map/
+
+// STRIP PLOT 
+// https://bl.ocks.org/phocks/878340b26d0aa69658854c17cdf2e046
+// http://www.maartenlambrechts.com/2015/11/30/interactive-strip-plots-for-visualizing-demographics.html
+// https://murray-cecile.github.io/map-unemployment/ 
+

@@ -2,44 +2,62 @@
 
 html,
 body {
-  font-family: 'Gill Sans';
   height: 100%;
-  margin: 0;
-  padding: 0;
   width: 100%;
+  font: 14px/16px Gill Sans;
+}
+
+#map {
+    width: 500px;
+    height: 475px;
+    padding: 50px 100px;
+    float: left; 
+    border: 1px solid #696969;
+    border-radius: 1px; 
+}
+
+#strip {
+    width: 100px;
+    height: 400px;
+    padding: 20px; 
+    float: left; 
+}
+
+#hist {
+    width: 100px;
+    height: 600px;
+    padding: 20px;
+    float: left;
 }
 
 .info {
     padding: 6px 8px;
-    font: 14px/16px Gill Sans;
+    font: 12px/14px Gill Sans;
     background: white;
     background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border:1.5px solid #1978cf;
+    border:1px solid #696969;
     border-radius: 1px;
 }
+
 .info h4 {
     margin: 0 0 5px;
-    color: #777;
+    color: #696969;
+}
+
+#findbox {
+    background: #eee;
+    border-radius:1px;
+    border:1px solid #696969;
+    margin-bottom: 10px;
+    padding: 2px;
+    width: 600px;
+    height: 22px;
 }
 
 .leaflet-zoom-animated {
     pointer-events: all; 
 }
 
-#findbox {
-    background: #eee;
-    border-radius:1px;
-    border:1.5px solid #1978cf;
-    box-shadow: 0 0 1px #999;   
-    margin-bottom: 10px;
-    padding: 2px 0;
-    width: 800px;
-    height: 22px;
-}
-
-.leaflet-control-search .search-cancel {
-    position: static;
-    float: left;
-    margin-left: -2px;
+.text {
+    font: 14px/16px Gill Sans;
 }
