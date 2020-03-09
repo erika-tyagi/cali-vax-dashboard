@@ -23,13 +23,6 @@ body {
     float: left; 
 }
 
-#hist {
-    width: 100px;
-    height: 600px;
-    padding: 20px;
-    float: left;
-}
-
 .info {
     padding: 6px 8px;
     font: 12px/14px Gill Sans;
@@ -41,7 +34,6 @@ body {
 
 .info h4 {
     margin: 0 0 5px;
-    color: #696969;
 }
 
 #findbox {
@@ -51,13 +43,73 @@ body {
     margin-bottom: 10px;
     padding: 2px;
     width: 600px;
-    height: 22px;
+    height: 20px;
 }
 
 .leaflet-zoom-animated {
     pointer-events: all; 
 }
 
-.text {
-    font: 14px/16px Gill Sans;
+.leaflet-interactive {
+    opacity: 0.7;
 }
+
+.text {
+    font: 12px/14px Gill Sans;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.legend .row i {
+    float: left;
+    background: #696969;
+}
+
+.legend .circle1 {
+    position: relative;
+    left: 1px;
+    top: 2px;
+    border-radius: 50%;
+    width: 5px;
+    height: 5px;
+  }
+
+.legend .circle2 {
+    position: relative;
+    left: 0px;
+    border-radius: 50%;
+    width: 7px;
+    height: 7px;
+  }
+
+.legend .circle3 {
+    position: relative;
+    left: -3px;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+}
+
+.navbar {
+  float: left;
+  bottom: 0;
+  width: 800px; 
+  left-padding: 10px;
+  font: 10px Gill Sans;
+  display: block;
+}
+
+.navbar a {
+  float: left;
+  display: block;
+  color: black;
+  text-align: center;
+  padding: 10px 20px;
+  text-decoration: none;
+  font: 12px Gill Sans;
+}
+
+
