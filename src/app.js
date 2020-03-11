@@ -17,68 +17,68 @@ domReady(() => {
   ]).then(d => {
     const [caBase, caSchools, caSchoolsSmall] = d;
     myMap(caBase, caSchools);
-    myStrip(caSchoolsSmall); 
+    // myStrip(caSchoolsSmall); 
   });
 });
 
 // ---------- STRIP PLOT ---------- //
-function myStrip(caSchools) {
+// function myStrip(caSchools) {
 
-  // dimensions 
-  var margin = {top: 0, right: 70, bottom: 0, left: 10}; 
-  var width = 300 - margin.left - margin.right, 
-      height = 600 - margin.top - margin.bottom;  
+//   // dimensions 
+//   var margin = {top: 0, right: 70, bottom: 0, left: 10}; 
+//   var width = 300 - margin.left - margin.right, 
+//       height = 600 - margin.top - margin.bottom;  
 
-  // svg layer 
-  var svg = d3.select('#strip').append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g'); 
+//   // svg layer 
+//   var svg = d3.select('#strip').append('svg')
+//     .attr('width', width + margin.left + margin.right)
+//     .attr('height', height + margin.top + margin.bottom)
+//     .append('g'); 
 
-  // scales 
-  var yScale = d3.scaleLinear()
-    .domain([95, 90, 80, 0])
-    .range([550, 381, 164, 0]); 
+//   // scales 
+//   var yScale = d3.scaleLinear()
+//     .domain([95, 90, 80, 0])
+//     .range([550, 381, 164, 0]); 
 
-  var xScale = d3.scaleLinear()
-    .domain([0, 1])
-    .range([height, 0]); 
+//   var xScale = d3.scaleLinear()
+//     .domain([0, 1])
+//     .range([height, 0]); 
 
-  var yAxis = d3.axisRight()
-    .scale(yScale)
-    .tickValues([95, 90, 80, 0])
-    .tickFormat(function(d) {return d * 1 + "%"}); 
+//   var yAxis = d3.axisRight()
+//     .scale(yScale)
+//     .tickValues([95, 90, 80, 0])
+//     .tickFormat(function(d) {return d * 1 + "%"}); 
 
-  // bars  
-  function getColor (d) {
-    return d > 95 ? '#1696d2' : 
-           d > 90 ? '#55b748' :
-           d > 80 ? '#e88e2d' : 
-           '#6e1614';
-  }; 
+//   // bars  
+//   function getColor (d) {
+//     return d > 95 ? '#1696d2' : 
+//            d > 90 ? '#55b748' :
+//            d > 80 ? '#e88e2d' : 
+//            '#6e1614';
+//   }; 
 
-  svg.selectAll('rect')
-    .data(caSchools.features)
-    .enter()
-    .append('rect')
-    .attr('x', xScale(1))
-    .attr('y', d => yScale(d.properties.PERCENT_jitter))
-    .attr('width', 80)
-    .attr('height', 0.5)
-    .attr('fill', d => getColor(d.properties.PERCENT_jitter))
-    .on('mouseover', d => mouseOverControl(d))
-    .on('mouseout', d => mouseOutControl(d))
-    .on('click', d => clickControl(d)); 
+//   svg.selectAll('rect')
+//     .data(caSchools.features)
+//     .enter()
+//     .append('rect')
+//     .attr('x', xScale(1))
+//     .attr('y', d => yScale(d.properties.PERCENT_jitter))
+//     .attr('width', 80)
+//     .attr('height', 0.5)
+//     .attr('fill', d => getColor(d.properties.PERCENT_jitter))
+//     .on('mouseover', d => mouseOverControl(d))
+//     .on('mouseout', d => mouseOutControl(d)); 
 
-  svg.append('g')
-    .attr('class', 'text')
-    .attr('transform', 'translate(0' + 85 + ',' + '4)')
-    .call(yAxis);
-}; 
+//   svg.append('g')
+//     .attr('class', 'text')
+//     .attr('transform', 'translate(0' + 85 + ',' + '4)')
+//     .call(yAxis);
+// }; 
 
-function mouseOverControl() {}; 
-function mouseOutControl() {}; 
-function clickControl() {}; 
+// function mouseOverControl(d) {
+//   info.update(d)
+// }; 
+// function mouseOutControl() {}; 
 
 // ---------- MAP ---------- //
 function myMap (caBase, caSchools) {
@@ -165,21 +165,11 @@ function myMap (caBase, caSchools) {
   }; 
 
   var schoolMouseout = function (d) {
-    info.update(d); 
+    info.update(); 
   }; 
 
-  var onColor = function (d) {
-    svg.selectAll("circle").filter("." + this.getAttribute(d.id))
-      .style('stroke', 'black')
-      .style('stroke-width', 2); 
-  }; 
-
-  var offColor = function (d) {
-    svg.selectAll("circle").filter("." + this.getAttribute(d.id)); 
-  }; 
-
-  var clicked = function (d) {
-    map.setView(L.latLng(d.LatLng), 15);
+  var schoolClicked = function (d) {
+    map.setView(L.latLng(d.LatLng), 10);
   }; 
 
   // schools   
@@ -197,21 +187,28 @@ function myMap (caBase, caSchools) {
     .attr("name", d => d.name)
     .attr("city", d => d.city)
     .attr("fill", d => getColor(d.coverage))
-    .style('stroke-width', 0.1)
-    .style('stroke', 'black')
-    .style("opacity", 0.9) 
+    .attr("stroke-width", 0.1)
+    .attr("stroke", "black")
+    .attr("opacity", 0.9) 
     .attr("r", d => Math.sqrt(parseInt(d.enrollment) * 0.1))
-    .attr("active", false)
-    .on("click", clicked); 
+    .attr("active", false); 
+
+  circles.on("click", function(d) {
+    schoolClicked(d); 
+  }) 
 
   circles.on("mouseover", function (d) {
+    d3.select(this)
+    .attr("stroke-width", 0.5)
+    .attr("r", 10)
     schoolMouseover(d); 
-    onColor.call(this, d); 
   }); 
 
   circles.on("mouseout", function (d) {
-    schoolMouseout(d); 
-    offColor.call(this, d); 
+    d3.select(this)
+    .attr("stroke-width", 0.1)
+    .attr("r", d => Math.sqrt(parseInt(d.enrollment) * 0.1))
+    schoolMouseout(d) 
   }); 
 
   var transform = d3.geoTransform({point: projectPoint}); 
@@ -233,8 +230,82 @@ function myMap (caBase, caSchools) {
         map.latLngToLayerPoint(d.LatLng).x +","+ 
         map.latLngToLayerPoint(d.LatLng).y +")";
       }); 
+
+  // ---------- STRIP PLOT ---------- //
+
+  // dimensions 
+  var margin = {top: 0, right: 70, bottom: 0, left: 10}; 
+  var width = 300 - margin.left - margin.right, 
+      height = 600 - margin.top - margin.bottom;  
+
+  // svg layer 
+  var svg = d3.select('#strip').append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g'); 
+
+  // scales 
+  var yScale = d3.scaleLinear()
+    .domain([95, 90, 80, 0])
+    .range([550, 381, 164, 0]); 
+
+  var xScale = d3.scaleLinear()
+    .domain([0, 1])
+    .range([height, 0]); 
+
+  var yAxis = d3.axisRight()
+    .scale(yScale)
+    .tickValues([95, 90, 80, 0])
+    .tickFormat(function(d) {return d * 1 + "%"}); 
+
+  // bars  
+  function getColor (d) {
+    return d > 95 ? '#1696d2' : 
+           d > 90 ? '#55b748' :
+           d > 80 ? '#e88e2d' : 
+           '#6e1614';
   }; 
-}
+
+  var strips = svg.selectAll('rect')
+    .data(caSchools.features)
+    .enter()
+    .append('rect')
+    .attr('x', xScale(1))
+    .attr('y', d => yScale(d.properties.PERCENT_jitter))
+    .attr('width', 80)
+    .attr('height', 0.5)
+    .attr('fill', d => getColor(d.properties.PERCENT_jitter))
+    .on('mouseover', d => schoolMouseover(d))
+    .on('mouseout', d => schoolMouseout())
+    // .on('click', d => schoolClicked(d)); 
+
+  strips.on('click', function (d) {
+    d3.select(this)
+    .attr('width', 100)
+    .attr('height', 2)
+    schoolClicked(d)
+  })
+
+  strips.on('mouseover', function (d) {
+    d3.select(this)
+    .attr('width', 100)
+    .attr('height', 2)
+    schoolMouseover(d)
+  });
+
+  strips.on('mouseout', function (d) {
+    d3.select(this)
+    .attr('width', 80)
+    .attr('height', 0.5)
+  })
+
+  svg.append('g')
+    .attr('class', 'text')
+    .attr('transform', 'translate(0' + 85 + ',' + '4)')
+    .call(yAxis);
+}; 
+};
+
 
 // ---------- OTHER SOURCES ---------- // 
 // MAP 
