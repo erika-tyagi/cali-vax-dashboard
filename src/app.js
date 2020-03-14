@@ -1,8 +1,11 @@
+/* global L */
 const domReady = require('domready');
 import './stylesheets/main.css';
 
 import * as d3 from 'd3';
+/* eslint-disable no-unsued-vars */
 import leafletEasybutton from 'leaflet-easybutton';
+/* eslint-enable no-unsued-vars */
 
 // ---------- DATA + RENDER ---------- //
 domReady(() => {
@@ -20,7 +23,7 @@ domReady(() => {
 // ---------- MAP ---------- //
 function myMap(caBase, caSchools) {
   // base map
-  var map = L.map('map', {center: [37.5, -119], zoom: 6});
+  const map = L.map('map', {center: [37.5, -119], zoom: 6});
   map.addLayer(
     new L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap',
@@ -39,9 +42,9 @@ function myMap(caBase, caSchools) {
   ).addTo(map);
 
   // svg layer
-  var svg = d3.select('#map').select('svg');
+  const svg = d3.select('#map').select('svg');
 
-  var g = svg.append('g').attr('class', 'leaflet-zoom-hide');
+  const g = svg.append('g').attr('class', 'leaflet-zoom-hide');
 
   // schools
   caSchools.features.forEach(function(d) {
@@ -55,7 +58,7 @@ function myMap(caBase, caSchools) {
 
   // info tooltip
   // https://leafletjs.com/examples/choropleth/
-  var info = L.control();
+  const info = L.control();
 
   info.onAdd = function(map) {
     this._div = L.DomUtil.create('div', 'info');
@@ -65,21 +68,13 @@ function myMap(caBase, caSchools) {
 
   info.update = function(d) {
     this._div.innerHTML = d
-      ? '<b>' +
-        d.name +
-        '</b>' +
-        '<br/>' +
-        d.city +
-        ', CA' +
-        '<br/>' +
-        '<br/>' +
-        'ENROLLMENT: ' +
-        d.enrollment +
-        '<br/>' +
-        'MMR COVERAGE: ' +
-        d.coverage +
-        '%' +
-        '<br/>'
+      ? `<b>${d.name}</b>` +
+        `<br/>${d.city}, CA` +
+        `<br/>` +
+        `<br/>` +
+        `ENROLLMENT: ${d.enrollment}<br/>` +
+        `MMR COVERAGE: ${d.coverage}%` +
+        `<br/>`
       : 'Hover over a school for details.';
   };
 
@@ -87,22 +82,18 @@ function myMap(caBase, caSchools) {
 
   // legend
   // https://gis.stackexchange.com/questions/133630/adding-leaflet-legend
-  var legend = L.control({position: 'bottomleft'});
+  const legend = L.control({position: 'bottomleft'});
   legend.onAdd = function(map) {
-    var div = L.DomUtil.create('div', 'info legend'),
-      labels = ['50 kindergarteners', '100 kindergarteners', '500 kindergarteners'];
+    const div = L.DomUtil.create('div', 'info legend');
+    const labels = ['50 kindergarteners', '100 kindergarteners', '500 kindergarteners'];
 
     div.innerHTML = [
-      '<div class="row" <span class="legend inner-row"><h4>SCHOOL<br/>ENROLLMENT</span></h4></div>' +
-        '<div class="row" "><i class="circle1" ></i><span class="legend inner-row">' +
-        labels[0] +
-        '</span></div>' +
-        '<div class="row" "><i class="circle2" ></i><span class="legend inner-row">' +
-        labels[1] +
-        '</span></div>' +
-        '<div class="row" "><i class="circle3" ></i><span class="legend inner-row">' +
-        labels[2] +
-        '</span></div>',
+      `${'<div class="row" <span class="legend inner-row"><h4>SCHOOL<br/>ENROLLMENT</span></h4></div>' +
+        '<div class="row" "><i class="circle1" ></i><span class="legend inner-row">'}${
+        labels[0]
+      }</span></div>` +
+        `<div class="row" "><i class="circle2" ></i><span class="legend inner-row">${labels[1]}</span></div>` +
+        `<div class="row" "><i class="circle3" ></i><span class="legend inner-row">${labels[2]}</span></div>`,
     ];
 
     return div;
@@ -111,11 +102,11 @@ function myMap(caBase, caSchools) {
   legend.addTo(map);
 
   // mouseover
-  var schoolMouseover = function(d) {
+  const schoolMouseover = function(d) {
     info.update(d);
   };
 
-  var schoolMouseout = function(d) {
+  const schoolMouseout = function(d) {
     info.update();
   };
 
@@ -124,7 +115,7 @@ function myMap(caBase, caSchools) {
     return d > 95 ? '#1696d2' : d > 90 ? '#55b748' : d > 80 ? '#e88e2d' : '#6e1614';
   }
 
-  var circles = g
+  const circles = g
     .selectAll('circle')
     .data(caSchools.features)
     .enter()
@@ -152,11 +143,11 @@ function myMap(caBase, caSchools) {
     schoolMouseout(d);
   });
 
-  var transform = d3.geoTransform({point: projectPoint});
-  var path = d3.geoPath().projection(transform);
+  const transform = d3.geoTransform({point: projectPoint});
+  const path = d3.geoPath().projection(transform);
 
   function projectPoint(x, y) {
-    var point = map.latLngToLayerPoint(new L.LatLng(x, y));
+    const point = map.latLngToLayerPoint(new L.LatLng(x, y));
     this.stream.point(point, x, point.y);
   }
 
@@ -167,9 +158,7 @@ function myMap(caBase, caSchools) {
   function update() {
     d3.select('.leaflet-zoom-animated').attr('pointer-events', 'all');
     circles.attr('transform', function(d) {
-      return (
-        'translate(' + map.latLngToLayerPoint(d.LatLng).x + ',' + map.latLngToLayerPoint(d.LatLng).y + ')'
-      );
+      return `translate(${map.latLngToLayerPoint(d.LatLng).x},${map.latLngToLayerPoint(d.LatLng).y})`;
     });
   }
 }
@@ -177,23 +166,23 @@ function myMap(caBase, caSchools) {
 // ---------- HISTOGRAM ---------- //
 
 function myHist(caHist) {
-  var width = 300,
-    height = 540;
+  const height = 540;
+  const width = 300;
 
   // svg layer
-  var svg = d3
+  const svg = d3
     .select('#hist')
     .append('svg')
     .attr('width', width)
     .attr('height', height)
     .append('g');
 
-  var x = d3
+  const x = d3
     .scaleLinear()
     .domain([0, 100])
     .range([0, width]);
 
-  var y = d3
+  const y = d3
     .scaleLinear()
     .domain([0, 100])
     .range([height, 0]);
@@ -218,7 +207,7 @@ function myHist(caHist) {
 
   svg
     .append('g')
-    .attr('transform', 'translate(0,' + height + ')')
+    .attr('transform', `translate(0,${height})`)
     .call(d3.axisBottom(x));
 
   svg.append('g').call(d3.axisLeft(y));
