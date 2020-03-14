@@ -29,13 +29,7 @@ hist_data <- geocoded_data %>%
     group_by(PERCENT) %>% 
     summarise(count = n())
 
-write.csv(hist_data, 'ca-hist.csv')
-
-
-
-
-
-
+write.csv(hist_data, 'ca-hist.csv', row.names = FALSE)
 
 
 library(tidyverse)

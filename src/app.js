@@ -174,13 +174,12 @@ function myHist (caHist) {
     .append('g'); 
 
   var x = d3.scaleLinear()
+    .domain([0, 100])
     .range([0, width]);
 
   var y = d3.scaleLinear()
+    .domain([0, 100])
     .range([height, 0]); 
-
-  x.domain(caHist.map(function(d) { return d.PERCENT; }));
-  y.domain([0, d3.max(caHist, function(d) { return d.count; })]);
 
   svg.selectAll(".bar")
     .data(caHist)
