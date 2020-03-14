@@ -8,7 +8,7 @@ body {
 }
 
 #map {
-    width: 500px;
+    width: 400px;
     height: 475px;
     padding: 50px 100px;
     float: left; 
@@ -16,8 +16,8 @@ body {
     border-radius: 1px; 
 }
 
-#strip {
-    width: 100px;
+#hist {
+    width: 200px;
     height: 400px;
     padding: 20px; 
     float: left; 
@@ -34,16 +34,6 @@ body {
 
 .info h4 {
     margin: 0 0 5px;
-}
-
-#findbox {
-    background: #eee;
-    border-radius:1px;
-    border:1px solid #696969;
-    margin-bottom: 10px;
-    padding: 2px;
-    width: 600px;
-    height: 20px;
 }
 
 .leaflet-zoom-animated {
@@ -112,4 +102,9 @@ body {
   font: 12px Gill Sans;
 }
 
+.easy-button-button {
+  opacity: 1.0; 
+}
+
+.bar { fill: steelblue; }
 

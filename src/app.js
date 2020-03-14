@@ -1,116 +1,51 @@
-const domReady = require('domready');
+const domReady = require("domready");
 import "./stylesheets/main.css";
 
 import * as d3 from "d3";
-import {select} from 'd3-selection';
-import {csv, json} from 'd3-fetch';
-import leafletSearch from 'leaflet-search'; 
-import leafletEasybutton from 'leaflet-easybutton'; 
+import {select} from "d3-selection";
+import {csv, json} from "d3-fetch";
+import leafletEasybutton from "leaflet-easybutton"; 
 
 
 // ---------- DATA + RENDER ---------- //
 domReady(() => {
   Promise.all([
-    json('./data/california.geojson'),
-    json('./data/ca-schools.geojson'),
-    json('./data/ca-schools_small.geojson'), 
+    json("./data/california.geojson"),
+    json("./data/ca-schools.geojson"),
+    csv("./data/ca-hist.csv"), 
   ]).then(d => {
-    const [caBase, caSchools, caSchoolsSmall] = d;
+    const [caBase, caSchools, caHist] = d;
     myMap(caBase, caSchools);
-    // myStrip(caSchoolsSmall); 
+    myHist(caHist)
   });
-});
-
-// ---------- STRIP PLOT ---------- //
-// function myStrip(caSchools) {
-
-//   // dimensions 
-//   var margin = {top: 0, right: 70, bottom: 0, left: 10}; 
-//   var width = 300 - margin.left - margin.right, 
-//       height = 600 - margin.top - margin.bottom;  
-
-//   // svg layer 
-//   var svg = d3.select('#strip').append('svg')
-//     .attr('width', width + margin.left + margin.right)
-//     .attr('height', height + margin.top + margin.bottom)
-//     .append('g'); 
-
-//   // scales 
-//   var yScale = d3.scaleLinear()
-//     .domain([95, 90, 80, 0])
-//     .range([550, 381, 164, 0]); 
-
-//   var xScale = d3.scaleLinear()
-//     .domain([0, 1])
-//     .range([height, 0]); 
-
-//   var yAxis = d3.axisRight()
-//     .scale(yScale)
-//     .tickValues([95, 90, 80, 0])
-//     .tickFormat(function(d) {return d * 1 + "%"}); 
-
-//   // bars  
-//   function getColor (d) {
-//     return d > 95 ? '#1696d2' : 
-//            d > 90 ? '#55b748' :
-//            d > 80 ? '#e88e2d' : 
-//            '#6e1614';
-//   }; 
-
-//   svg.selectAll('rect')
-//     .data(caSchools.features)
-//     .enter()
-//     .append('rect')
-//     .attr('x', xScale(1))
-//     .attr('y', d => yScale(d.properties.PERCENT_jitter))
-//     .attr('width', 80)
-//     .attr('height', 0.5)
-//     .attr('fill', d => getColor(d.properties.PERCENT_jitter))
-//     .on('mouseover', d => mouseOverControl(d))
-//     .on('mouseout', d => mouseOutControl(d)); 
-
-//   svg.append('g')
-//     .attr('class', 'text')
-//     .attr('transform', 'translate(0' + 85 + ',' + '4)')
-//     .call(yAxis);
-// }; 
-
-// function mouseOverControl(d) {
-//   info.update(d)
-// }; 
-// function mouseOutControl() {}; 
+}); 
 
 // ---------- MAP ---------- //
 function myMap (caBase, caSchools) {
 
   // base map 
-  var map = L.map('map', 
-    {center: [37.5, -119],  zoom: 6}); 
-  map.addLayer(new L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
-    {attribution: '© OpenStreetMap'})); 
+  var map = L.map("map", 
+    {center: [37.5, -119], zoom: 6}); 
+  map.addLayer(new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", 
+    {attribution: "© OpenStreetMap"})); 
   map.addLayer(new L.geoJSON(caBase, 
     {style: {"color": "#696969", "weight": 1}})); 
 
-  // search bar 
-  // https://github.com/stefanocudini/leaflet-search/blob/master/examples/outside.html
-  var markersLayer = new L.LayerGroup();
-  map.addLayer(markersLayer);
-  map.addControl(new L.Control.Search(
-    {container: 'findbox', 
-    layer: markersLayer, 
-    collapsed: false, 
-    textPlaceholder: 'Search for an elementary school here...'})); 
-
   // home button 
   // https://gis.stackexchange.com/questions/127286/home-button-leaflet-map
-  L.easyButton('fa-home', function (btn, map){map.setView([37.5, -119], 6)}, 'Zoom To Home').addTo(map);
+  L.easyButton("fa-home", function (btn, map) {map.setView([37.5, -119], 6)}, "Zoom To Home").addTo(map);
 
   // svg layer 
-  var svg = d3.select("#map").select("svg");
-  var g = svg.append("g").attr("class", "leaflet-zoom-hide");
+  var svg = d3
+    .select("#map")
+    .select("svg");
+
+  var g = svg
+    .append("g")
+    .attr("class", "leaflet-zoom-hide");
 
   // schools  
-  caSchools.features.forEach(function (d) {
+  caSchools.features.forEach (function (d) {
     d.LatLng = new L.LatLng(d.properties.lat, d.properties.lon)
     d.name = d.properties.SCHOOL_NAME
     d.city = d.properties.CITY
@@ -124,17 +59,17 @@ function myMap (caBase, caSchools) {
   var info = L.control();
 
   info.onAdd = function (map) {
-    this._div = L.DomUtil.create('div', 'info'); 
+    this._div = L.DomUtil.create("div", "info"); 
     this.update();
     return this._div;
   };
 
   info.update = function (d) {
-    this._div.innerHTML = '<h4>KINDERGARTEN MMR COVERAGE</h4>' + (d ?
-      d.name + "<br/>" +
+    this._div.innerHTML = (d ? 
+      "<b>" + d.name + "</b>" + "<br/>" +
       d.city + ", CA" + "<br/>" + "<br/>" + 
       "ENROLLMENT: " + d.enrollment + "<br/>" + 
-      "COVERAGE: " + d.coverage + "%" + "<br/>" 
+      "MMR COVERAGE: " + d.coverage + "%" + "<br/>" 
       : "Hover over a school for details.");
   };
 
@@ -142,14 +77,15 @@ function myMap (caBase, caSchools) {
 
   // legend 
   // https://gis.stackexchange.com/questions/133630/adding-leaflet-legend
-  var legend = L.control({position: 'bottomleft'});
+  var legend = L.control(
+    {position: "bottomleft"});
   legend.onAdd = function (map) {
 
-  var div = L.DomUtil.create('div', 'info legend'),
-  labels = ['50 kindergarteners', '100 kindergarteners', '500 kindergarteners'];
+  var div = L.DomUtil.create("div", "info legend"),
+  labels = ["50 kindergarteners", "100 kindergarteners", "500 kindergarteners"];
 
-  div.innerHTML = 
-  ['<div class="row" <span class="legend inner-row"><h4>SCHOOL<br/>ENROLLMENT</span></h4></div>' +
+  div.innerHTML = [
+  '<div class="row" <span class="legend inner-row"><h4>SCHOOL<br/>ENROLLMENT</span></h4></div>' +
   '<div class="row" "><i class="circle1" ></i><span class="legend inner-row">' + labels[0] + '</span></div>' +
   '<div class="row" "><i class="circle2" ></i><span class="legend inner-row">' + labels[1] + '</span></div>' +
   '<div class="row" "><i class="circle3" ></i><span class="legend inner-row">' + labels[2] + '</span></div>']
@@ -168,16 +104,12 @@ function myMap (caBase, caSchools) {
     info.update(); 
   }; 
 
-  var schoolClicked = function (d) {
-    map.setView(L.latLng(d.LatLng), 10);
-  }; 
-
   // schools   
   function getColor (d) {
-    return d > 95 ? '#1696d2' : 
-           d > 90 ? '#55b748' :
-           d > 80 ? '#e88e2d' : 
-           '#6e1614';
+    return d > 95 ? "#1696d2" : 
+           d > 90 ? "#55b748" :
+           d > 80 ? "#e88e2d" : 
+           "#6e1614";
   }
 
   var circles = g.selectAll("circle")
@@ -192,10 +124,6 @@ function myMap (caBase, caSchools) {
     .attr("opacity", 0.9) 
     .attr("r", d => Math.sqrt(parseInt(d.enrollment) * 0.1))
     .attr("active", false); 
-
-  circles.on("click", function(d) {
-    schoolClicked(d); 
-  }) 
 
   circles.on("mouseover", function (d) {
     d3.select(this)
@@ -224,88 +152,52 @@ function myMap (caBase, caSchools) {
   update();
 
   function update() {
-    select('.leaflet-zoom-animated').attr('pointer-events', 'all');
+    select(".leaflet-zoom-animated").attr("pointer-events", "all");
     circles.attr("transform", function(d) { 
       return "translate("+ 
         map.latLngToLayerPoint(d.LatLng).x +","+ 
         map.latLngToLayerPoint(d.LatLng).y +")";
-      }); 
-
-  // ---------- STRIP PLOT ---------- //
-
-  // dimensions 
-  var margin = {top: 0, right: 70, bottom: 0, left: 10}; 
-  var width = 300 - margin.left - margin.right, 
-      height = 600 - margin.top - margin.bottom;  
-
-  // svg layer 
-  var svg = d3.select('#strip').append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g'); 
-
-  // scales 
-  var yScale = d3.scaleLinear()
-    .domain([95, 90, 80, 0])
-    .range([550, 381, 164, 0]); 
-
-  var xScale = d3.scaleLinear()
-    .domain([0, 1])
-    .range([height, 0]); 
-
-  var yAxis = d3.axisRight()
-    .scale(yScale)
-    .tickValues([95, 90, 80, 0])
-    .tickFormat(function(d) {return d * 1 + "%"}); 
-
-  // bars  
-  function getColor (d) {
-    return d > 95 ? '#1696d2' : 
-           d > 90 ? '#55b748' :
-           d > 80 ? '#e88e2d' : 
-           '#6e1614';
+      });
   }; 
-
-  var strips = svg.selectAll('rect')
-    .data(caSchools.features)
-    .enter()
-    .append('rect')
-    .attr('x', xScale(1))
-    .attr('y', d => yScale(d.properties.PERCENT_jitter))
-    .attr('width', 80)
-    .attr('height', 0.5)
-    .attr('fill', d => getColor(d.properties.PERCENT_jitter))
-    .on('mouseover', d => schoolMouseover(d))
-    .on('mouseout', d => schoolMouseout())
-    // .on('click', d => schoolClicked(d)); 
-
-  strips.on('click', function (d) {
-    d3.select(this)
-    .attr('width', 100)
-    .attr('height', 2)
-    schoolClicked(d)
-  })
-
-  strips.on('mouseover', function (d) {
-    d3.select(this)
-    .attr('width', 100)
-    .attr('height', 2)
-    schoolMouseover(d)
-  });
-
-  strips.on('mouseout', function (d) {
-    d3.select(this)
-    .attr('width', 80)
-    .attr('height', 0.5)
-  })
-
-  svg.append('g')
-    .attr('class', 'text')
-    .attr('transform', 'translate(0' + 85 + ',' + '4)')
-    .call(yAxis);
-}; 
 };
 
+// ---------- HISTOGRAM ---------- //
+
+function myHist (caHist) {
+  var width = 300, 
+      height = 540;  
+
+  // svg layer 
+  var svg = d3.select('#hist').append('svg')
+    .attr('width', width)
+    .attr('height', height)
+    .append('g'); 
+
+  var x = d3.scaleLinear()
+    .range([0, width]);
+
+  var y = d3.scaleLinear()
+    .range([height, 0]); 
+
+  x.domain(caHist.map(function(d) { return d.PERCENT; }));
+  y.domain([0, d3.max(caHist, function(d) { return d.count; })]);
+
+  svg.selectAll(".bar")
+    .data(caHist)
+    .enter().append("rect")
+    .attr("class", "bar")
+    .attr("x", function(d) { return x(d.PERCENT); })
+    // .attr("width", x.bandwidth())
+    .attr("y", function(d) { return y(d.count); })
+    .attr("height", function(d) { return height - y(d.count); });
+
+  svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+  svg.append("g")
+      .call(d3.axisLeft(y));
+};
 
 // ---------- OTHER SOURCES ---------- // 
 // MAP 
