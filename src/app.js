@@ -16,12 +16,12 @@ domReady(() => {
   ]).then(d => {
     const [caBase, caSchools, caHist] = d;
     myMap(caBase, caSchools);
-    myHist(caHist);
+    myHist(caHist, {'y': 45});
   });
 });
 
 // ---------- MAP ---------- //
-function myMap(caBase, caSchools) {
+function myMap(caBase, caSchools, caHist) {
   // base map
   const map = L.map('map', {center: [37.5, -119], zoom: 6});
   map.addLayer(
@@ -42,10 +42,10 @@ function myMap(caBase, caSchools) {
   ).addTo(map);
 
   // svg layer
-  const svg = d3
+  var svg = d3
     .select('#map')
     .select('svg');
-  const g = svg
+  var g = svg
     .append('g')
     .attr('class', 'leaflet-zoom-hide');
 
@@ -104,21 +104,12 @@ function myMap(caBase, caSchools) {
 
   legend.addTo(map);
 
-  // mouseover
-  const schoolMouseover = function(d) {
-    info.update(d);
-  };
-
-  const schoolMouseout = function(d) {
-    info.update();
-  };
-
   // schools
   function getColor(d) {
     return d > 95 ? '#1696d2' : d > 90 ? '#55b748' : d > 80 ? '#e88e2d' : '#6e1614';
   }
 
-  const circles = g
+  var circles = g
     .selectAll('circle')
     .data(caSchools.features)
     .enter()
@@ -134,16 +125,19 @@ function myMap(caBase, caSchools) {
 
   circles.on('mouseover', function(d) {
     d3.select(this)
-      .attr('stroke-width', 0.5)
+      .attr('stroke-width', 3)
+      .attr('stroke', 'black')
       .attr('r', 10);
-    schoolMouseover(d);
+    info.update(d);
+    d3.select('#hist').selectAll("*").remove();
+    myHist(caHist, {'y': d.coverage});
   });
 
   circles.on('mouseout', function(d) {
     d3.select(this)
       .attr('stroke-width', 0.1)
       .attr('r', d => Math.sqrt(parseInt(d.enrollment) * 0.1));
-    schoolMouseout(d);
+    info.update();
   });
 
   const transform = d3.geoTransform({point: projectPoint});
@@ -163,12 +157,12 @@ function myMap(caBase, caSchools) {
     circles.attr('transform', function(d) {
       return `translate(${map.latLngToLayerPoint(d.LatLng).x},${map.latLngToLayerPoint(d.LatLng).y})`;
     });
-  }
-}
+  }; 
+}; 
 
 // ---------- HISTOGRAM ---------- //
 
-function myHist (caHist) {
+function myHist (caHist, marker) {
   var margin = {top: 10, right: 20, bottom: 20, left: 35},
       width = 200 - margin.left - margin.right, 
       height = 550 - margin.top - margin.bottom;  
@@ -207,15 +201,14 @@ function myHist (caHist) {
        "#6e1614";
      }
 
-  svg.selectAll(".bar")
-    .data(caHist)
-    .enter()
-    .append("rect")
-    .attr("class", "bar")
-    .attr("y", function(d) { return yScale(d.PERCENT); })
-    .attr("width", function(d) {return xScale(d.count);})
-    .attr("height", height / 100 + 0.2)
-    .attr("fill", d => getColor(d.PERCENT)); 
+  // var bars = svg.selectAll(".bar")
+  //   .data(caHist)
+  //   .enter()
+  //   .append("rect")
+  //   .attr("y", function(d) { return yScale(d.PERCENT); })
+  //   .attr("width", function(d) {return xScale(d.count);})
+  //   .attr("height", height / 100 + 0.2)
+  //   .attr("fill", d => getColor(d.PERCENT)); 
 
   svg.append("g")
     .attr("class", "text")
@@ -224,7 +217,15 @@ function myHist (caHist) {
 
   svg.append("g")
     .attr("class", "text")
-    .call(yAxis)
+    .call(yAxis); 
+
+  // update marker 
+  svg.append("g")
+    .append("rect")
+    .attr("y", function(d) { return yScale(marker.y); })
+    .attr("width", function(d) {return xScale(10000);})
+    .attr("height", 3)
+    .attr("fill", "black"); 
 };
 
 
