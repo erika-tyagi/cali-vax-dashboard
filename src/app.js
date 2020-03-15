@@ -15,8 +15,8 @@ domReady(() => {
     d3.csv('./data/ca-hist.csv'),
   ]).then(d => {
     const [caBase, caSchools, caHist] = d;
-    myMap(caBase, caSchools);
-    myHist(caHist, {'y': 45});
+    myMap(caBase, caSchools, caHist);
+    myHist(caHist, {'y': 999});
   });
 });
 
@@ -138,6 +138,8 @@ function myMap(caBase, caSchools, caHist) {
       .attr('stroke-width', 0.1)
       .attr('r', d => Math.sqrt(parseInt(d.enrollment) * 0.1));
     info.update();
+    d3.select('#hist').selectAll("*").remove();
+    myHist(caHist, {'y': 999});
   });
 
   const transform = d3.geoTransform({point: projectPoint});
@@ -201,14 +203,14 @@ function myHist (caHist, marker) {
        "#6e1614";
      }
 
-  // var bars = svg.selectAll(".bar")
-  //   .data(caHist)
-  //   .enter()
-  //   .append("rect")
-  //   .attr("y", function(d) { return yScale(d.PERCENT); })
-  //   .attr("width", function(d) {return xScale(d.count);})
-  //   .attr("height", height / 100 + 0.2)
-  //   .attr("fill", d => getColor(d.PERCENT)); 
+  var bars = svg.selectAll(".bar")
+    .data(caHist)
+    .enter()
+    .append("rect")
+    .attr("y", function(d) { return yScale(d.PERCENT); })
+    .attr("width", function(d) {return xScale(d.count);})
+    .attr("height", height / 100 + 0.2)
+    .attr("fill", d => getColor(d.PERCENT)); 
 
   svg.append("g")
     .attr("class", "text")
