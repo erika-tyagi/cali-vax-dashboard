@@ -20,9 +20,10 @@ library(geojsonio)
 
 geocoded_data <- read.csv('geocoded-data.csv') %>% 
     select(SCHOOL_NAME, PUBLIC_PRIVATE, CITY, SCHOOL_CODE, ENROLLMENT, PERCENT, lat, lon) %>% 
+    arrange(desc(PERCENT)) %>% 
     drop_na() 
 
-# geojson_write(geocoded_data, lat = 'lat', lon = 'lon', file = 'ca-schools.geojson')
+geojson_write(geocoded_data, lat = 'lat', lon = 'lon', file = 'ca-schools.geojson')
 
 
 hist_data <- geocoded_data %>% 

@@ -4,11 +4,11 @@ html,
 body {
   height: 100%;
   width: 100%;
-  font: 14px/16px Gill Sans;
+  font: 13px Gill Sans;
 }
 
 #map {
-    width: 400px;
+    width: 350px;
     height: 475px;
     padding: 50px 100px;
     float: left; 
@@ -18,16 +18,16 @@ body {
 
 #hist {
     width: 200px;
-    height: 400px;
-    padding: 20px; 
+    height: 475px;
+    padding: 0px 10px;
     float: left; 
 }
 
 .info {
     padding: 6px 8px;
-    font: 12px/14px Gill Sans;
+    font: 12px Gill Sans;
     background: white;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255, 255, 255, 1.0);
     border:1px solid #696969;
     border-radius: 1px;
 }
@@ -36,16 +36,16 @@ body {
     margin: 0 0 5px;
 }
 
+.text {
+    font: 11px Gill Sans;
+}
+
 .leaflet-zoom-animated {
     pointer-events: all; 
 }
 
 .leaflet-interactive {
-    opacity: 0.7;
-}
-
-.text {
-    font: 12px/14px Gill Sans;
+    opacity: 1.0;
 }
 
 .row {
@@ -84,7 +84,7 @@ body {
 }
 
 .navbar {
-  float: left;
+  /*float: left;*/
   bottom: 0;
   width: 800px; 
   left-padding: 10px;
@@ -106,5 +106,5 @@ body {
   opacity: 1.0; 
 }
 
-.bar { fill: steelblue; }
+
 

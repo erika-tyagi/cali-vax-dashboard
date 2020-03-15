@@ -15,7 +15,7 @@ domReady(() => {
     d3.csv('./data/ca-hist.csv'),
   ]).then(d => {
     const [caBase, caSchools, caHist] = d;
-    // myMap(caBase, caSchools);
+    myMap(caBase, caSchools);
     myHist(caHist);
   });
 });
@@ -42,9 +42,12 @@ function myMap(caBase, caSchools) {
   ).addTo(map);
 
   // svg layer
-  const svg = d3.select('#map').select('svg');
-
-  const g = svg.append('g').attr('class', 'leaflet-zoom-hide');
+  const svg = d3
+    .select('#map')
+    .select('svg');
+  const g = svg
+    .append('g')
+    .attr('class', 'leaflet-zoom-hide');
 
   // schools
   caSchools.features.forEach(function(d) {
@@ -165,53 +168,65 @@ function myMap(caBase, caSchools) {
 
 // ---------- HISTOGRAM ---------- //
 
-function myHist(caHist) {
-  const height = 540;
-  const width = 300;
+function myHist (caHist) {
+  var margin = {top: 10, right: 20, bottom: 20, left: 35},
+      width = 200 - margin.left - margin.right, 
+      height = 550 - margin.top - margin.bottom;  
 
-  // svg layer
-  const svg = d3
-    .select('#hist')
-    .append('svg')
-    .attr('width', width)
-    .attr('height', height)
-    .append('g');
+  var svg = d3.select("#hist").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
 
-  const x = d3
-    .scaleLinear()
+  var yScale = d3.scaleLinear()
     .domain([0, 100])
-    .range([0, width]);
+    .range([0, height]);
 
-  const y = d3
-    .scaleLinear()
-    .domain([0, 100])
-    .range([height, 0]);
+  var xScale = d3.scaleLog()
+    .domain([10000, 1])
+    .range([width, 0]); 
 
-  svg
-    .selectAll('.bar')
+  // https://stackoverflow.com/questions/15211488/formatting-numbers-with-commas-in-d3
+  var yAxis = d3.axisLeft()
+    .scale(yScale)
+    .tickValues([0, 80, 95, 100])
+    .tickFormat(function(d) {return d * 1 + "%"}); 
+
+  var format = d3.format(",")
+  var xAxis = d3.axisBottom()
+    .scale(xScale)
+    .tickValues([1, 10, 100, 1000, 10000])
+    .tickFormat(function (d) {return format(d)}); 
+
+  function getColor (d) {
+    return d >= 95 ? "#1696d2" : 
+       d >= 90 ? "#55b748" :
+       d >= 80 ? "#e88e2d" : 
+       "#6e1614";
+     }
+
+  svg.selectAll(".bar")
     .data(caHist)
     .enter()
-    .append('rect')
-    .attr('class', 'bar')
-    .attr('x', function(d) {
-      return x(d.PERCENT);
-    })
-    // .attr("width", x.bandwidth())
-    .attr('y', function(d) {
-      return y(d.count);
-    })
-    .attr('width', width)
-    .attr('height', function(d) {
-      return height - y(d.count);
-    });
+    .append("rect")
+    .attr("class", "bar")
+    .attr("y", function(d) { return yScale(d.PERCENT); })
+    .attr("width", function(d) {return xScale(d.count);})
+    .attr("height", height / 100 + 0.2)
+    .attr("fill", d => getColor(d.PERCENT)); 
 
-  svg
-    .append('g')
-    .attr('transform', `translate(0,${height})`)
-    .call(d3.axisBottom(x));
+  svg.append("g")
+    .attr("class", "text")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
 
-  svg.append('g').call(d3.axisLeft(y));
-}
+  svg.append("g")
+    .attr("class", "text")
+    .call(yAxis)
+};
+
 
 // ---------- OTHER SOURCES ---------- //
 // MAP
@@ -223,7 +238,5 @@ function myHist(caHist) {
 // https://bost.ocks.org/mike/leaflet/
 // https://alenastern.github.io/interactive_aid_map/
 
-// STRIP PLOT
-// https://bl.ocks.org/phocks/878340b26d0aa69658854c17cdf2e046
-// http://www.maartenlambrechts.com/2015/11/30/interactive-strip-plots-for-visualizing-demographics.html
-// https://murray-cecile.github.io/map-unemployment/
+// HISTOGRAM 
+// // https://bl.ocks.org/caravinden/eb0e5a2b38c8815919290fa838c6b63b
