@@ -12,16 +12,17 @@ domReady(() => {
   Promise.all([
     d3.json('./data/california.geojson'),
     d3.json('./data/ca-schools.geojson'),
-    d3.csv('./data/ca-hist.csv'),
+    // d3.csv('./data/ca-hist.csv'),
   ]).then(d => {
-    const [caBase, caSchools, caHist] = d;
-    myMap(caBase, caSchools, caHist);
-    myHist(caHist, {'y': 999});
-  });
+    const [caBase, caSchools] = d;
+    myMap(caBase, caSchools);
+    myHist(caSchools, {'y': 999});
+    });
 });
 
 // ---------- MAP ---------- //
-function myMap(caBase, caSchools, caHist) {
+function myMap(caBase, caSchools) {
+
   // base map
   const map = L.map('map', {center: [37.5, -119], zoom: 6});
   map.addLayer(
@@ -49,7 +50,7 @@ function myMap(caBase, caSchools, caHist) {
     .append('g')
     .attr('class', 'leaflet-zoom-hide');
 
-  // schools
+  // process schools
   caSchools.features.forEach(function(d) {
     d.LatLng = new L.LatLng(d.properties.lat, d.properties.lon);
     d.name = d.properties.SCHOOL_NAME;
@@ -104,9 +105,9 @@ function myMap(caBase, caSchools, caHist) {
 
   legend.addTo(map);
 
-  // schools
+  // school circles 
   function getColor(d) {
-    return d > 95 ? '#1696d2' : d > 90 ? '#55b748' : d > 80 ? '#e88e2d' : '#6e1614';
+    return d > 95 ? '#1696d2' : d > 90 ? '#55b748' : d > 80 ? '#ffab00' : '#b01515';
   }
 
   var circles = g
@@ -114,6 +115,7 @@ function myMap(caBase, caSchools, caHist) {
     .data(caSchools.features)
     .enter()
     .append('circle')
+    .filter(function(d) {return d.enrollment > 0})
     .attr('name', d => d.name)
     .attr('city', d => d.city)
     .attr('fill', d => getColor(d.coverage))
@@ -123,6 +125,7 @@ function myMap(caBase, caSchools, caHist) {
     .attr('r', d => Math.sqrt(parseInt(d.enrollment) * 0.1))
     .attr('active', false);
 
+  // mouseover control 
   circles.on('mouseover', function(d) {
     d3.select(this)
       .attr('stroke-width', 3)
@@ -130,7 +133,7 @@ function myMap(caBase, caSchools, caHist) {
       .attr('r', 10);
     info.update(d);
     d3.select('#hist').selectAll("*").remove();
-    myHist(caHist, {'y': d.coverage});
+    myHist(caSchools, {'y': d.coverage});
   });
 
   circles.on('mouseout', function(d) {
@@ -139,7 +142,7 @@ function myMap(caBase, caSchools, caHist) {
       .attr('r', d => Math.sqrt(parseInt(d.enrollment) * 0.1));
     info.update();
     d3.select('#hist').selectAll("*").remove();
-    myHist(caHist, {'y': 999});
+    myHist(caSchools, {'y': 999});
   });
 
   const transform = d3.geoTransform({point: projectPoint});
@@ -164,11 +167,14 @@ function myMap(caBase, caSchools, caHist) {
 
 // ---------- HISTOGRAM ---------- //
 
-function myHist (caHist, marker) {
+function myHist (caSchools, marker) {
+
+  // dimensions 
   var margin = {top: 10, right: 20, bottom: 20, left: 35},
       width = 200 - margin.left - margin.right, 
       height = 550 - margin.top - margin.bottom;  
 
+  // svg layer 
   var svg = d3.select("#hist").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -176,19 +182,21 @@ function myHist (caHist, marker) {
     .attr("transform", 
           "translate(" + margin.left + "," + margin.top + ")");
 
+  // y axis  
   var yScale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, height]);
 
+  var yAxis = d3.axisLeft()
+      .scale(yScale)
+      .tickValues([0, 80, 95, 100])
+      .tickFormat(function(d) {return d * 1 + "%"}); 
+
+  // x axis 
+  // https://stackoverflow.com/questions/15211488/formatting-numbers-with-commas-in-d3
   var xScale = d3.scaleLog()
     .domain([10000, 1])
     .range([width, 0]); 
-
-  // https://stackoverflow.com/questions/15211488/formatting-numbers-with-commas-in-d3
-  var yAxis = d3.axisLeft()
-    .scale(yScale)
-    .tickValues([0, 80, 95, 100])
-    .tickFormat(function(d) {return d * 1 + "%"}); 
 
   var format = d3.format(",")
   var xAxis = d3.axisBottom()
@@ -196,30 +204,49 @@ function myHist (caHist, marker) {
     .tickValues([1, 10, 100, 1000, 10000])
     .tickFormat(function (d) {return format(d)}); 
 
+
   function getColor (d) {
     return d >= 95 ? "#1696d2" : 
        d >= 90 ? "#55b748" :
-       d >= 80 ? "#e88e2d" : 
-       "#6e1614";
+       d >= 80 ? "#ffab00" : 
+       "#b01515";
      }
 
+  // histogram bars 
+  var histogram = d3.histogram()
+    .value(function(d) { return d.coverage; })
+    .domain(yScale.domain())
+    .thresholds(yScale.ticks(100));
+
   var bars = svg.selectAll(".bar")
-    .data(caHist)
+    .data(histogram(caSchools.features
+      .filter(function(d) { return d.enrollment > 0 })))
     .enter()
     .append("rect")
-    .attr("y", function(d) { return yScale(d.PERCENT); })
-    .attr("width", function(d) {return xScale(d.count);})
+    .filter(function(d) { return d.length > 0 })
+    .attr("y", function(d) { return yScale(d.x0); })
+    .attr("width", function(d) { return xScale(d.length); }) 
     .attr("height", height / 100 + 0.2)
-    .attr("fill", d => getColor(d.PERCENT)); 
+    .attr("fill", function(d) { return getColor(d.x0); }); 
 
+  // x axis 
   svg.append("g")
     .attr("class", "text")
     .attr("transform", "translate(0," + height + ")")
     .call(xAxis);
 
+  // y axis 
   svg.append("g")
     .attr("class", "text")
     .call(yAxis); 
+
+  // herd immunity threshold  
+  svg.append("g")
+    .append("rect")
+    .attr("y", function(d) { return yScale(95); })
+    .attr("width", function(d) {return xScale(10000);})
+    .attr("height", 1)
+    .attr("fill", "black"); 
 
   // update marker 
   svg.append("g")
