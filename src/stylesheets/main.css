@@ -13,20 +13,20 @@ body {
   margin: auto;
 }
 
-#footer {
+.footer {
  position: absolute;
  width: 100%;
  bottom: 40px; 
 }
 
-#footer a {
+.footer a {
   color: black;
   text-decoration: none; 
   font: 13px Gill Sans;
-  margin:0 40px;
+  margin: 0 40px;
 }
 
-#footer b {
+.footer b {
   color: black;
   text-decoration: none; 
   font: 13px Gill Sans;

@@ -12,7 +12,6 @@ domReady(() => {
   Promise.all([
     d3.json('./data/california.geojson'),
     d3.json('./data/ca-schools.geojson'),
-    // d3.csv('./data/ca-hist.csv'),
   ]).then(d => {
     const [caBase, caSchools] = d;
     myMap(caBase, caSchools);
@@ -257,7 +256,6 @@ function myHist (caSchools, marker) {
     .attr("fill", "black"); 
 };
 
-
 // ---------- OTHER SOURCES ---------- //
 // MAP
 // http://bl.ocks.org/d3noob/9267535
@@ -269,4 +267,9 @@ function myHist (caSchools, marker) {
 // https://alenastern.github.io/interactive_aid_map/
 
 // HISTOGRAM 
-// // https://bl.ocks.org/caravinden/eb0e5a2b38c8815919290fa838c6b63b
+// https://bl.ocks.org/caravinden/eb0e5a2b38c8815919290fa838c6b63b
+// https://bl.ocks.org/officeofjane/f132634f67b114815ba686484f9f7a77
+
+
+
+
