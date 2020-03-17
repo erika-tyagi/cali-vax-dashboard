@@ -1,12 +1,9 @@
-/* global L */
 const domReady = require('domready');
 import './stylesheets/main.css';
 
 import * as d3 from 'd3';
-/* eslint-disable no-unsued-vars */
 import leafletEasybutton from 'leaflet-easybutton';
 import {sliderHorizontal} from "d3-simple-slider";
-/* eslint-enable no-unsued-vars */
 
 // ---------- DATA + RENDER ---------- //
 domReady(() => {
@@ -17,31 +14,44 @@ domReady(() => {
     const [caBase, caSchools] = d;
     const state = {
       maxCoverage: 100, 
-      minEnrollment: 0
+      minEnrollment: 0, 
+      schoolType: ['PUBLIC', 'PRIVATE']
     }; 
-    myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment);
-    myHist(caSchools, {'y': 999}, state.maxCoverage, state.minEnrollment);
+    myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment, state.schoolType);
+    myHist(caSchools, 
+      {'y': 999}, 
+      state.maxCoverage, 
+      state.minEnrollment, 
+      state.schoolType);
 
     coverageSlider(caSchools, function(d) {
       d3.select("#map").selectAll("*").remove();
       d3.select("#hist").selectAll("*").remove();
       state.maxCoverage = d * 100; // percentage formatting 
-      myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment);
-      myHist(caSchools, {'y': 999}, state.maxCoverage, state.minEnrollment)
+      myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment, state.schoolType);
+      myHist(caSchools, {'y': 999}, state.maxCoverage, state.minEnrollment, state.schoolType)
     });
 
     enrollmentSlider(caSchools, function(d) {
       d3.select("#map").selectAll("*").remove();
       d3.select("#hist").selectAll("*").remove();
       state.minEnrollment = d;   
-      myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment);
-      myHist(caSchools, {'y': 999}, state.maxCoverage, state.minEnrollment)
+      myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment, state.schoolType);
+      myHist(caSchools, {'y': 999}, state.maxCoverage, state.minEnrollment, state.schoolType)
     });
+
+    privatePublicDropdown(caSchools, function(d){ 
+      d3.select("#map").selectAll("*").remove();
+      d3.select("#hist").selectAll("*").remove();
+      state.schoolType = this.value;   
+      myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment, state.schoolType);
+      myHist(caSchools, {'y': 999}, state.maxCoverage, state.minEnrollment, state.schoolType)
+    }); 
   });
 }); 
 
 // ---------- MAP ---------- //
-function myMap(caBase, caSchools, maxCoverage, minEnrollment) {
+function myMap(caBase, caSchools, maxCoverage, minEnrollment, schoolType) {
 
   // base map
   // https://stackoverflow.com/questions/19186428/refresh-leaflet-map-map-container-is-already-initialized
@@ -50,7 +60,7 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment) {
         container._leaflet_id = null;
       }
 
-  const map = L.map('map', {center: [37.5, -119.5], zoom: 6});
+  const map = L.map('map', {center: [37.3, -119.6], zoom: 6});
   map.addLayer(
     new L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap',
@@ -63,7 +73,7 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment) {
   L.easyButton(
     'fa-home',
     function(btn, map) {
-      map.setView([37.5, -119.5], 6);
+      map.setView([37.3, -119.6], 6);
     },
     'Zoom To Home',
   ).addTo(map);
@@ -137,12 +147,15 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment) {
     return d > 95 ? '#1696d2' : d > 90 ? '#55b748' : d > 80 ? '#ffab00' : '#b01515';
   }
 
+  // https://stackoverflow.com/questions/46894352/filtering-an-array-of-objects-based-on-another-array-in-javascript
   var circles = g
     .selectAll('circle')
     .data(caSchools.features)
     .enter()
     .append('circle')
-    .filter(function(d) {return d.coverage < maxCoverage & d.enrollment > minEnrollment})
+    .filter(function(d) {return d.coverage < maxCoverage 
+      & d.enrollment > minEnrollment
+      & schoolType.indexOf(d.public_private) !== -1})
     .attr('name', d => d.name)
     .attr('city', d => d.city)
     .attr('fill', d => getColor(d.coverage))
@@ -160,7 +173,11 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment) {
       .attr('r', 10);
     info.update(d);
     d3.select('#hist').selectAll("*").remove();
-    myHist(caSchools, {'y': d.coverage}, maxCoverage, minEnrollment);
+    myHist(caSchools, 
+      {'y': d.coverage}, 
+      maxCoverage, 
+      minEnrollment, 
+      schoolType);
   });
 
   circles.on('mouseout', function(d) {
@@ -169,7 +186,11 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment) {
       .attr('r', d => Math.sqrt(parseInt(d.enrollment) * 0.1));
     info.update();
     d3.select('#hist').selectAll("*").remove();
-    myHist(caSchools, {'y': 999}, maxCoverage, minEnrollment);
+    myHist(caSchools, 
+      {'y': 999}, 
+      maxCoverage, 
+      minEnrollment, 
+      schoolType);
   });
 
   const transform = d3.geoTransform({point: projectPoint});
@@ -194,12 +215,12 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment) {
 
 // ---------- HISTOGRAM ---------- //
 
-function myHist (caSchools, marker, maxCoverage, minEnrollment) {
+function myHist (caSchools, marker, maxCoverage, minEnrollment, schoolType) {
 
   // dimensions 
-  var margin = {top: 20, right: 20, bottom: 20, left: 35},
+  var margin = {top: 20, right: 20, bottom: 55, left: 35},
       width = 200 - margin.left - margin.right, 
-      height = 600 - margin.top - margin.bottom;  
+      height = 570 - margin.top - margin.bottom;  
 
   // svg layer 
   var svg = d3.select("#hist").append("svg")
@@ -231,7 +252,6 @@ function myHist (caSchools, marker, maxCoverage, minEnrollment) {
     .tickValues([1, 10, 100, 1000, 10000])
     .tickFormat(function (d) {return format(d)}); 
 
-
   function getColor (d) {
     return d >= 95 ? "#1696d2" : 
        d >= 90 ? "#55b748" :
@@ -247,7 +267,9 @@ function myHist (caSchools, marker, maxCoverage, minEnrollment) {
 
   var bars = svg.selectAll(".bar")
     .data(histogram(caSchools.features
-      .filter(function(d) { return d.coverage < maxCoverage & d.enrollment > minEnrollment })))
+      .filter(function(d) { return d.coverage < maxCoverage 
+        & d.enrollment > minEnrollment 
+        & schoolType.indexOf(d.public_private) !== -1})))
     .enter()
     .append("rect")
     .filter(function(d) { return d.length > 0 })
@@ -267,14 +289,6 @@ function myHist (caSchools, marker, maxCoverage, minEnrollment) {
     .attr("class", "text")
     .call(yAxis); 
 
-  // herd immunity threshold  
-  svg.append("g")
-    .append("rect")
-    .attr("y", function(d) { return yScale(95); })
-    .attr("width", function(d) {return xScale(10000);})
-    .attr("height", 1)
-    .attr("fill", "black"); 
-
   // update marker 
   svg.append("g")
     .append("rect")
@@ -282,16 +296,27 @@ function myHist (caSchools, marker, maxCoverage, minEnrollment) {
     .attr("width", function(d) {return xScale(10000);})
     .attr("height", 3)
     .attr("fill", "black"); 
+
+  svg.append("text")
+    .attr("dy", height + margin.top + 14)
+    .attr("dx", 0)
+    .text("Number of schools by")
+
+  svg.append("text")
+    .attr("dy", height + margin.top + 28)
+    .attr("dx", 0)
+    .text("kindergarten MMR coverage")
 };
 
 // ---------- SLIDERS ---------- //
-// https://bl.ocks.org/officeofjane/f132634f67b114815ba686484f9f7a77
-function coverageSlider(caSchools, onChange) {
+function coverageSlider(caSchools, update) {
 
-  var margin = {top: 25, right: 40, bottom: 0, left: 20},
+  // dimensions
+  var margin = {top: 55, right: 40, bottom: 0, left: 15},
       width = 200 - margin.left - margin.right, 
-      height = 60 - margin.top - margin.bottom;  
+      height = 90 - margin.top - margin.bottom;  
 
+  // slider 
   var coverageSlider = sliderHorizontal()
     .min(0)
     .max(1)
@@ -299,9 +324,12 @@ function coverageSlider(caSchools, onChange) {
     .tickFormat(d3.format(".0%"))
     .ticks(5)
     .default(100)
-    .on("onchange", onChange);
+    .on("onchange", update);
 
-  var svg = d3.select("#sliders").append("svg")
+  // add on svg 
+  var svg = d3
+    .select("#sliders")
+    .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
@@ -311,25 +339,30 @@ function coverageSlider(caSchools, onChange) {
       .attr("dy", -15)
       .attr("dx", -10)
       .text("Schools with coverage below...")
-
-  return coverageSlider.value()
 }; 
 
-function enrollmentSlider(caSchools, onChange) {
+function enrollmentSlider(caSchools, update) {
 
-  var margin = {top: 50, right: 40, bottom: 20, left: 20},
-      width = 200 - margin.left - margin.right; 
+  // dimensions 
+  var margin = {top: 55, right: 40, bottom: 0, left: 15},
+      width = 200 - margin.left - margin.right, 
+      height = 90 - margin.top - margin.bottom;  
 
+  // slider 
   var coverageSlider = sliderHorizontal()
     .min(0)
     .max(500)
     .width(width)
     .ticks(5)
     .default(0)
-    .on("onchange", onChange);
+    .on("onchange", update);
 
-  var svg = d3.select("#sliders").append("svg")
+  // add on svg 
+  var svg = d3
+    .select("#sliders")
+    .append("svg")
     .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
     .call(coverageSlider)
@@ -338,6 +371,26 @@ function enrollmentSlider(caSchools, onChange) {
       .attr("dx", -10)
       .text("Schools with enrollment above...")
 }; 
+
+// ---------- DROPDOWNS ---------- //
+function privatePublicDropdown(caSchools, onChange) {
+
+  function getTypes (d) {
+    return d === "All schools" ? ["PUBLIC", "PRIVATE"] : 
+       d === "Public schools" ? ["PUBLIC"] :
+       d === "Private schools" ? ["PRIVATE"] : 
+       ["PUBLIC", "PRIVATE"];} 
+
+  d3.select("#dropdown")
+    .selectAll("myOptions")
+    .data(["All schools", "Public schools", "Private schools"])
+    .enter()
+    .append("option")
+    .text(d => d)
+    .attr("value", d => getTypes(d));
+
+  d3.select("#dropdown").on("change", onChange); 
+  }; 
 
 // ---------- OTHER SOURCES ---------- //
 // MAP
@@ -352,7 +405,9 @@ function enrollmentSlider(caSchools, onChange) {
 // HISTOGRAM 
 // https://bl.ocks.org/caravinden/eb0e5a2b38c8815919290fa838c6b63b
 
-// SLIDERS
+// SLIDERS AND DROPDOWNS 
+// https://bl.ocks.org/officeofjane/f132634f67b114815ba686484f9f7a77
+// https://www.d3-graph-gallery.com/graph/line_select.html
 // thanks alliecollins! 
 
 

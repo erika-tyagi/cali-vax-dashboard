@@ -7,21 +7,21 @@ body {
 }
 
 .content {
-  max-width: 90%; 
+  max-width: 95%; 
   margin: auto;
 }
 
 .footer {
- position: absolute;
- width: 90%;
- bottom: 40px; 
+  position: absolute;
+  width: 90%;
+  bottom: 30px; 
 }
 
 .footer a {
   color: black;
   text-decoration: none; 
   font: 13px Gill Sans;
-  margin: 0 40px;
+  margin-left: 50px;
 }
 
 .footer b {
@@ -32,51 +32,56 @@ body {
 }
 
 #sliders {
-    width: 200px;
-    height: 20px;
-    padding: 10px 0px;
-    float: left; 
+  width: 200px;
+  height: 20px;
+  padding: 25px 0px;
+  float: left; 
+}
+
+#dropdown {
+  width: 150px; 
+  font: 13px Gill Sans;
+  background: white; 
+  border: 1px solid rgba(187, 187, 187, 1.0);
 }
 
 #map {
-    width: 400px;
-    height: 520px;
-    padding: 50px 50px;
-    float: left; 
-    border: 1px solid #696969;
-    border-radius: 1px; 
+  width: 400px;
+  height: 475px;
+  padding: 50px 50px;
+  float: left; 
+  border: 1px solid #696969;
+  border-radius: 1px; 
 }
 
 #hist {
-    width: 150px;
-    height: 520px;
-    padding: 0px 10px;
-    float: left; 
+  padding: 0px 10px;
+  float: left; 
 }
 
 .info {
-    padding: 6px 8px;
-    font: 12px Gill Sans;
-    background: white;
-    background: rgba(255, 255, 255, 1.0);
-    border:1px solid #696969;
-    border-radius: 1px;
+  padding: 6px 8px;
+  font: 12px Gill Sans;
+  background: white;
+  background: rgba(255, 255, 255, 1.0);
+  border:1px solid #696969;
+  border-radius: 1px;
 }
 
 .info h4 {
-    margin: 0 0 5px;
+  margin: 0 0 5px;
 }
 
 .text {
-    font: 11px Gill Sans;
+  font: 11px Gill Sans;
 }
 
 .leaflet-zoom-animated {
-    pointer-events: all; 
+  pointer-events: all; 
 }
 
 .leaflet-interactive {
-    opacity: 1.0;
+  opacity: 1.0;
 }
 
 .easy-button-button {
@@ -84,38 +89,38 @@ body {
 }
 
 .row {
-    display: flex;
-    justify-content: space-between;
+  display: flex;
+  justify-content: space-between;
 }
 
 .legend .row i {
-    float: left;
-    background: #696969;
+  float: left;
+  background: #696969;
 }
 
 .legend .circle1 {
-    position: relative;
-    left: 1px;
-    top: 2px;
-    border-radius: 50%;
-    width: 5px;
-    height: 5px;
+  position: relative;
+  left: 1px;
+  top: 2px;
+  border-radius: 50%;
+  width: 5px;
+  height: 5px;
   }
 
 .legend .circle2 {
-    position: relative;
-    left: 0px;
-    border-radius: 50%;
-    width: 7px;
-    height: 7px;
+  position: relative;
+  left: 0px;
+  border-radius: 50%;
+  width: 7px;
+  height: 7px;
   }
 
 .legend .circle3 {
-    position: relative;
-    left: -3px;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
+  position: relative;
+  left: -3px;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
 }
 
 .parameter-value {
