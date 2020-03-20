@@ -2,7 +2,7 @@
 
 <!doctype html>
 <html>
-  <div class = "content"> 
+  <div class="content"> 
   <head>
     <title>California MMR Dashboard</title>
     <meta charset="utf-8">
@@ -14,15 +14,18 @@
   <body>
     <div id="title">
       <h1>Measles Vaccination Rates for Every Kindergarten in California</h1>
-      <p>In 2000, measles was <a href="https://www.cdc.gov/measles/about/history.html">declared eliminated</a> from the United States – largely due to the development of a highly effective vaccine against measles, mumps, and rubella (MMR) and a strong national vaccination program that achieved high coverage among children. In recent years, however, the rise of the <a href="https://en.wikipedia.org/wiki/Vaccine_hesitancy">anti-vaccination movement</a> has left several communities with concerningly low measles vaccination coverage. <a href="https://www.who.int/immunization/sage/meetings/2017/october/2._target_immunity_levels_FUNK.pdf">Experts recommend</a> that at least 92 to 95 percent of a community be vaccinated against measles to protect against outbreaks. Explore kindergarten MMR coverage across elementary schools in California below.</p>
+      <div id="description">
+        <p>In 2000, measles was <a href="https://www.cdc.gov/measles/about/history.html">declared eliminated</a> from the United States – largely due to the development of a highly effective vaccine against measles, mumps, and rubella (MMR) and a strong national vaccination program that achieved high coverage among children. In recent years, however, the rise of the <a href="https://en.wikipedia.org/wiki/Vaccine_hesitancy">anti-vaccination movement</a> has left several communities with concerningly low measles vaccination coverage. <a href="https://www.who.int/immunization/sage/meetings/2017/october/2._target_immunity_levels_FUNK.pdf">Experts recommend</a> that at least 92 to 95 percent of a community be vaccinated against measles to protect against outbreaks. Explore kindergarten MMR coverage across elementary schools in California below.</p>
     </div>
-    <div id="sliders">
-      <select id="year-dropdown"></select>
-      <select id="type-dropdown"></select>
     </div>
-    <div id="map"></div>
-    <div id="hist"></div>
-    <div class="legend"></div>
+    <div class="container">
+      <div id="sliders" class="item">
+        <select id="year-dropdown"></select>
+        <select id="type-dropdown"></select>
+      </div>
+      <div id="map" class="item"></div>
+      <div id="hist" class="item"></div>
+    </div>
     <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
     integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
     crossorigin=""></script>
@@ -35,4 +38,3 @@
     </div>
   </body>
 </html>
-

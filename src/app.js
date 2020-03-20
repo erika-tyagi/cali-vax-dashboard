@@ -66,10 +66,7 @@ function myMap(caBase, caSchools, yearFilter, maxCoverage, minEnrollment, school
     container._leaflet_id = null;
   }
   
-  console.log(container._leaflet_id)
   const map = L.map('map', {center: [37.3, -119.6], zoom: 6});
-  console.log(container._leaflet_id)
-
   map.addLayer(
     new L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap',
