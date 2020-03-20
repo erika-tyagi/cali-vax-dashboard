@@ -13,54 +13,63 @@ domReady(() => {
   ]).then(d => {
     const [caBase, caSchools] = d;
     const state = {
+      yearFilter: '2017', 
       maxCoverage: 100, 
       minEnrollment: 0, 
-      schoolType: ['PUBLIC', 'PRIVATE']
+      schoolType: ['PUBLIC', 'PRIVATE'], 
+      marker: {'y': 999}
     }; 
-    myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment, state.schoolType);
-    myHist(caSchools, 
-      {'y': 999}, 
-      state.maxCoverage, 
-      state.minEnrollment, 
-      state.schoolType);
+    myMap(caBase, caSchools, state.yearFilter, state.maxCoverage, state.minEnrollment, state.schoolType);
+    myHist(caSchools, state.yearFilter, state.maxCoverage, state.minEnrollment, state.schoolType, state.marker);
 
     coverageSlider(caSchools, function(d) {
       d3.select("#map").selectAll("*").remove();
       d3.select("#hist").selectAll("*").remove();
       state.maxCoverage = d * 100; // percentage formatting 
-      myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment, state.schoolType);
-      myHist(caSchools, {'y': 999}, state.maxCoverage, state.minEnrollment, state.schoolType)
+      myMap(caBase, caSchools, state.yearFilter, state.maxCoverage, state.minEnrollment, state.schoolType);
+      myHist(caSchools, state.yearFilter, state.maxCoverage, state.minEnrollment, state.schoolType, state.marker); 
     });
 
     enrollmentSlider(caSchools, function(d) {
       d3.select("#map").selectAll("*").remove();
       d3.select("#hist").selectAll("*").remove();
       state.minEnrollment = d;   
-      myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment, state.schoolType);
-      myHist(caSchools, {'y': 999}, state.maxCoverage, state.minEnrollment, state.schoolType)
+      myMap(caBase, caSchools, state.yearFilter, state.maxCoverage, state.minEnrollment, state.schoolType);
+      myHist(caSchools, state.yearFilter, state.maxCoverage, state.minEnrollment, state.schoolType, state.marker); 
     });
 
-    privatePublicDropdown(caSchools, function(d){ 
+    privatePublicDropdown(caSchools, function(d) { 
       d3.select("#map").selectAll("*").remove();
       d3.select("#hist").selectAll("*").remove();
       state.schoolType = this.value;   
-      myMap(caBase, caSchools, state.maxCoverage, state.minEnrollment, state.schoolType);
-      myHist(caSchools, {'y': 999}, state.maxCoverage, state.minEnrollment, state.schoolType)
+      myMap(caBase, caSchools, state.yearFilter, state.maxCoverage, state.minEnrollment, state.schoolType);
+      myHist(caSchools, state.yearFilter, state.maxCoverage, state.minEnrollment, state.schoolType, state.marker); 
+    }); 
+
+    yearDropdown(caSchools, function(d) {
+      d3.select("#map").selectAll("*").remove();
+      d3.select("#hist").selectAll("*").remove();
+      state.yearFilter = this.value;   
+      myMap(caBase, caSchools, state.yearFilter, state.maxCoverage, state.minEnrollment, state.schoolType);
+      myHist(caSchools, state.yearFilter, state.maxCoverage, state.minEnrollment, state.schoolType, state.marker); 
     }); 
   });
-}); 
+});  
 
 // ---------- MAP ---------- //
-function myMap(caBase, caSchools, maxCoverage, minEnrollment, schoolType) {
+function myMap(caBase, caSchools, yearFilter, maxCoverage, minEnrollment, schoolType) {
 
   // base map
   // https://stackoverflow.com/questions/19186428/refresh-leaflet-map-map-container-is-already-initialized
-  var container = L.DomUtil.get('map');
-      if (container != null) {
-        container._leaflet_id = null;
-      }
-
+  const container = L.DomUtil.get('map');
+  if (container != null) {
+    container._leaflet_id = null;
+  }
+  
+  console.log(container._leaflet_id)
   const map = L.map('map', {center: [37.3, -119.6], zoom: 6});
+  console.log(container._leaflet_id)
+
   map.addLayer(
     new L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap',
@@ -79,17 +88,18 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment, schoolType) {
   ).addTo(map);
 
   // svg layer
-  var svg = d3
+  const svg = d3
     .select('#map')
     .select('svg');
 
-  var g = svg
+  const g = svg
     .append('g')
     .attr('class', 'leaflet-zoom-hide');
 
   // process schools
   caSchools.features.forEach(function(d) {
     d.LatLng = new L.LatLng(d.properties.lat, d.properties.lon);
+    d.year = d.properties.year; 
     d.name = d.properties.SCHOOL_NAME;
     d.public_private = d.properties.PUBLIC_PRIVATE; 
     d.city = d.properties.CITY;
@@ -148,12 +158,13 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment, schoolType) {
   }
 
   // https://stackoverflow.com/questions/46894352/filtering-an-array-of-objects-based-on-another-array-in-javascript
-  var circles = g
+  const circles = g
     .selectAll('circle')
     .data(caSchools.features)
     .enter()
     .append('circle')
-    .filter(function(d) {return d.coverage < maxCoverage 
+    .filter(function(d) {return d.year === yearFilter 
+      & d.coverage < maxCoverage 
       & d.enrollment > minEnrollment
       & schoolType.indexOf(d.public_private) !== -1})
     .attr('name', d => d.name)
@@ -173,11 +184,7 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment, schoolType) {
       .attr('r', 10);
     info.update(d);
     d3.select('#hist').selectAll("*").remove();
-    myHist(caSchools, 
-      {'y': d.coverage}, 
-      maxCoverage, 
-      minEnrollment, 
-      schoolType);
+    myHist(caSchools, yearFilter, maxCoverage, minEnrollment, schoolType, {'y': d.coverage});
   });
 
   circles.on('mouseout', function(d) {
@@ -186,11 +193,7 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment, schoolType) {
       .attr('r', d => Math.sqrt(parseInt(d.enrollment) * 0.1));
     info.update();
     d3.select('#hist').selectAll("*").remove();
-    myHist(caSchools, 
-      {'y': 999}, 
-      maxCoverage, 
-      minEnrollment, 
-      schoolType);
+    myHist(caSchools, yearFilter, maxCoverage, minEnrollment, schoolType, {'y': 999});
   });
 
   const transform = d3.geoTransform({point: projectPoint});
@@ -215,39 +218,39 @@ function myMap(caBase, caSchools, maxCoverage, minEnrollment, schoolType) {
 
 // ---------- HISTOGRAM ---------- //
 
-function myHist (caSchools, marker, maxCoverage, minEnrollment, schoolType) {
+function myHist (caSchools, yearFilter, maxCoverage, minEnrollment, schoolType, marker) {
 
   // dimensions 
-  var margin = {top: 20, right: 20, bottom: 55, left: 35},
-      width = 200 - margin.left - margin.right, 
-      height = 570 - margin.top - margin.bottom;  
+  const margin = {top: 20, right: 20, bottom: 55, left: 35};
+      const width = 200 - margin.left - margin.right; 
+      const height = 570 - margin.top - margin.bottom;  
 
   // svg layer 
-  var svg = d3.select("#hist").append("svg")
+  const svg = d3.select("#hist").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
     .attr("transform", 
-          "translate(" + margin.left + "," + margin.top + ")");
+          `translate(${  margin.left  },${  margin.top  })`);
 
   // y axis  
-  var yScale = d3.scaleLinear()
+  const yScale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, height]);
 
-  var yAxis = d3.axisLeft()
+  const yAxis = d3.axisLeft()
       .scale(yScale)
       .tickValues([0, 80, 95, 100])
-      .tickFormat(function(d) {return d * 1 + "%"}); 
+      .tickFormat(function(d) {return `${Number(d)  }%`}); 
 
   // x axis 
   // https://stackoverflow.com/questions/15211488/formatting-numbers-with-commas-in-d3
-  var xScale = d3.scaleLog()
+  const xScale = d3.scaleLog()
     .domain([10000, 1])
     .range([width, 0]); 
 
-  var format = d3.format(",")
-  var xAxis = d3.axisBottom()
+  const format = d3.format(",")
+  const xAxis = d3.axisBottom()
     .scale(xScale)
     .tickValues([1, 10, 100, 1000, 10000])
     .tickFormat(function (d) {return format(d)}); 
@@ -260,14 +263,15 @@ function myHist (caSchools, marker, maxCoverage, minEnrollment, schoolType) {
      }
 
   // histogram bars 
-  var histogram = d3.histogram()
+  const histogram = d3.histogram()
     .value(function(d) { return d.coverage; })
     .domain(yScale.domain())
     .thresholds(yScale.ticks(100));
 
-  var bars = svg.selectAll(".bar")
+  const bars = svg.selectAll(".bar")
     .data(histogram(caSchools.features
-      .filter(function(d) { return d.coverage < maxCoverage 
+      .filter(function(d) { return d.year === yearFilter
+        & d.coverage < maxCoverage 
         & d.enrollment > minEnrollment 
         & schoolType.indexOf(d.public_private) !== -1})))
     .enter()
@@ -276,12 +280,12 @@ function myHist (caSchools, marker, maxCoverage, minEnrollment, schoolType) {
     .attr("y", function(d) { return yScale(d.x0); })
     .attr("width", function(d) { return xScale(d.length); }) 
     .attr("height", height / 100 + 0.2)
-    .attr("fill", function(d) { return getColor(d.x0); }); 
+    .attr("fill", function(d) { return getColor(d.x0); })
 
   // x axis 
   svg.append("g")
     .attr("class", "text")
-    .attr("transform", "translate(0," + height + ")")
+    .attr("transform", `translate(0,${  height  })`)
     .call(xAxis);
 
   // y axis 
@@ -312,12 +316,12 @@ function myHist (caSchools, marker, maxCoverage, minEnrollment, schoolType) {
 function coverageSlider(caSchools, update) {
 
   // dimensions
-  var margin = {top: 55, right: 40, bottom: 0, left: 15},
-      width = 200 - margin.left - margin.right, 
-      height = 90 - margin.top - margin.bottom;  
+  const margin = {top: 55, right: 40, bottom: 0, left: 15};
+      const width = 200 - margin.left - margin.right; 
+      const height = 90 - margin.top - margin.bottom;  
 
   // slider 
-  var coverageSlider = sliderHorizontal()
+  const coverageSlider = sliderHorizontal()
     .min(0)
     .max(1)
     .width(width)
@@ -327,13 +331,13 @@ function coverageSlider(caSchools, update) {
     .on("onchange", update);
 
   // add on svg 
-  var svg = d3
+  const svg = d3
     .select("#sliders")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .attr("transform", `translate(${  margin.left  },${  margin.top  })`)
     .call(coverageSlider)
     .append("text")
       .attr("dy", -15)
@@ -344,12 +348,12 @@ function coverageSlider(caSchools, update) {
 function enrollmentSlider(caSchools, update) {
 
   // dimensions 
-  var margin = {top: 55, right: 40, bottom: 0, left: 15},
-      width = 200 - margin.left - margin.right, 
-      height = 90 - margin.top - margin.bottom;  
+  const margin = {top: 55, right: 40, bottom: 0, left: 15};
+      const width = 200 - margin.left - margin.right; 
+      const height = 90 - margin.top - margin.bottom;  
 
   // slider 
-  var coverageSlider = sliderHorizontal()
+  const coverageSlider = sliderHorizontal()
     .min(0)
     .max(500)
     .width(width)
@@ -358,13 +362,13 @@ function enrollmentSlider(caSchools, update) {
     .on("onchange", update);
 
   // add on svg 
-  var svg = d3
+  const svg = d3
     .select("#sliders")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .attr("transform", `translate(${  margin.left  },${  margin.top  })`)
     .call(coverageSlider)
     .append("text")
       .attr("dy", -15)
@@ -375,22 +379,47 @@ function enrollmentSlider(caSchools, update) {
 // ---------- DROPDOWNS ---------- //
 function privatePublicDropdown(caSchools, onChange) {
 
+  // convert dropdown keys to values 
   function getTypes (d) {
-    return d === "All schools" ? ["PUBLIC", "PRIVATE"] : 
-       d === "Public schools" ? ["PUBLIC"] :
-       d === "Private schools" ? ["PRIVATE"] : 
+    return d === "All Schools" ? ["PUBLIC", "PRIVATE"] : 
+       d === "Public Schools" ? ["PUBLIC"] :
+       d === "Private Schools" ? ["PRIVATE"] : 
        ["PUBLIC", "PRIVATE"];} 
 
-  d3.select("#dropdown")
+  // dropdown 
+  d3.select("#type-dropdown")
     .selectAll("myOptions")
-    .data(["All schools", "Public schools", "Private schools"])
+    .data(["All Schools", "Public Schools", "Private Schools"])
     .enter()
     .append("option")
     .text(d => d)
     .attr("value", d => getTypes(d));
 
-  d3.select("#dropdown").on("change", onChange); 
+  d3.select("#type-dropdown").on("change", onChange); 
   }; 
+
+
+function yearDropdown(caSchools, onChange) {
+
+  // convert dropdown keys to values 
+  function getTypes (d) {
+    return d === "2016-2017 School Year" ? "2016" : 
+       d === "2017-2018 School Year" ? "2017" :
+       d === "2018-2019 School Year" ? "2018" : 
+       "2018";} 
+
+  // dropdown 
+  d3.select("#year-dropdown")
+    .selectAll("myOptions")
+    .data(["2018-2019 School Year", "2017-2018 School Year", "2016-2017 School Year"])
+    .enter()
+    .append("option")
+    .text(d => d)
+    .attr("value", d => getTypes(d));
+
+  d3.select("#year-dropdown").on("change", onChange); 
+  };
+
 
 // ---------- OTHER SOURCES ---------- //
 // MAP
@@ -408,6 +437,5 @@ function privatePublicDropdown(caSchools, onChange) {
 // SLIDERS AND DROPDOWNS 
 // https://bl.ocks.org/officeofjane/f132634f67b114815ba686484f9f7a77
 // https://www.d3-graph-gallery.com/graph/line_select.html
-// thanks alliecollins! 
 
 
