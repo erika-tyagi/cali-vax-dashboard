@@ -1,6 +1,6 @@
 html,
 body {
-  position: absolute; 
+  /*position: absolute; */
   height: 100%;
   width: 100%;
   font: 13px Gill Sans;
@@ -8,6 +8,11 @@ body {
 
 .container {
   display: flex; 
+}
+
+#page-wrap {
+  width: 1000px;
+  margin: 0 auto; 
 }
 
 .item {
